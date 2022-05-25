@@ -72,3 +72,6 @@ vendor/
 
 # Fastlane-generated files
 *.zip
+
+_bundle/
+_ruby-version

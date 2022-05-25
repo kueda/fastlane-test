@@ -1,0 +1,44 @@
+BUILD_NUMBER = get_build_number( xcodeproj: "ios/FastlaneTest.xcodeproj" )
+VERSION = File.open( "../package.json" ) { | f | JSON.parse( f.read )["version"] }
+EDITOR = ENV["EDITOR"] || `git config core.editor`.strip || "nano"
+
+default_platform(:android)
+
+platform :android do
+  desc "Description of what the lane does"
+  lane :custom_lane do
+    # add actions here: https://docs.fastlane.tools/actions
+  end
+end
+
+lane :testlane do
+  desc "Just a test"
+  puts "BUILD_NUMBER: #{BUILD_NUMBER}"
+  puts "VERSION: #{VERSION}"
+  puts "EDITOR: #{EDITOR}"
+  # Bit silly but takes advantage of existing syntax highlighting
+  fname = "COMMIT_EDITMSG"
+  File.open( fname, "w" ) do | f |
+    f << <<~INSTRUCTIONS
+
+
+      # Enter notes about what's new in v#{VERSION}+#{BUILD_NUMBER}. Comment lines beginning with # will be ignored.
+      #
+      # Here's what changed since the last tag:
+      #{changelog_from_git_commits.split( "\n" ).map{ | line | "# * #{line}" }.join( "\n" ).strip}
+    INSTRUCTIONS
+  end
+  system "#{EDITOR} #{fname}", exception: true
+  release_notes = ""
+  File.readlines( fname ) do | line |
+    release_notes += line unless line[0] == "#"
+  end
+  FileUtils.rm( fname )
+  puts "now i'm done, release_notes:\n#{release_notes}"
+  # add_git_tag(
+  #   includes_lane: false,
+  #   prefix: "v",
+  #   build_number: VERSION,
+  #   postfix: "+#{BUILD_NUMBER}"
+  # )
+end
