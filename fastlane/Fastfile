@@ -55,10 +55,11 @@ lane :release do
   File.readlines( fname ) do | line |
     release_notes += line unless line[0] == "#"
   end
+  puts "release_notes: #{release_notes}"
   FileUtils.rm( fname )
   if release_notes.strip.size == 0
-    UI.abort_with_message! "You gotta enter release notes!"
     reset_git_repo
+    UI.abort_with_message! "You gotta enter release notes!"
   end
 
   # TODO write release notes to a place where they can be translated and add that file to git
