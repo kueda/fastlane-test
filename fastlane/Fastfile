@@ -12,21 +12,15 @@ platform :android do
 end
 
 def set_android_version_code( new_version_code )
-  cmd = <<~BASH
-    cat ../android/app/build.gradle | \
-      sed '0,/versionCode/{s/versionCode [0-9]+/versionCode #{new_version_code}/}' > \
-      ../android/app/build.gradle
-  BASH
-  system cmd, exception: true
+  build_gradle_path = "../android/app/build.gradle"
+  new_gradle = File.read( build_gradle_path ).sub( /versionCode\s+\d+/, "versionCode #{new_version_code}" )
+  File.open( build_gradle_path, "w" ) { | f | f.write( new_gradle ) }
 end
 
 def set_android_version_name( new_version_name )
-  cmd = <<~BASH
-    cat ../android/app/build.gradle | \
-      sed '0,/versionName/{s/versionName ".+?"/versionName "#{VERSION}"/}' > \
-      ../android/app/build.gradle
-  BASH
-  system cmd, exception: true
+  build_gradle_path = "../android/app/build.gradle"
+  new_gradle = File.read( build_gradle_path ).sub( /versionName\s+".+"/, "versionName \"#{VERSION}\"" )
+  File.open( build_gradle_path, "w" ) { | f | f.write( new_gradle ) }
 end
 
 lane :release do
