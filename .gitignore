@@ -75,3 +75,5 @@ vendor/
 
 _bundle/
 _ruby-version
+
+fastlane/report.xml

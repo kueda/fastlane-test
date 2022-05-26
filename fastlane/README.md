@@ -13,10 +13,10 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 # Available Actions
 
-### testlane
+### release
 
 ```sh
-[bundle exec] fastlane testlane
+[bundle exec] fastlane release
 ```
 
 

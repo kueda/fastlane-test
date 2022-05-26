@@ -1,6 +1,6 @@
-BUILD_NUMBER = get_build_number( xcodeproj: "ios/FastlaneTest.xcodeproj" )
 VERSION = File.open( "../package.json" ) { | f | JSON.parse( f.read )["version"] }
 EDITOR = ENV["EDITOR"] || `git config core.editor`.strip || "nano"
+XCODEPROJ = "ios/FastlaneTest.xcodeproj"
 
 default_platform(:android)
 
@@ -11,21 +11,49 @@ platform :android do
   end
 end
 
-lane :testlane do
+def set_android_version_code( new_version_code )
+  cmd = <<~BASH
+    cat ../android/app/build.gradle | \
+      sed '0,/versionCode/{s/versionCode [0-9]+/versionCode #{new_version_code}/}' > \
+      ../android/app/build.gradle
+  BASH
+  system cmd, exception: true
+end
+
+def set_android_version_name( new_version_name )
+  cmd = <<~BASH
+    cat ../android/app/build.gradle | \
+      sed '0,/versionName/{s/versionName ".+?"/versionName "#{VERSION}"/}' > \
+      ../android/app/build.gradle
+  BASH
+  system cmd, exception: true
+end
+
+lane :release do
   desc "Just a test"
-  puts "BUILD_NUMBER: #{BUILD_NUMBER}"
-  puts "VERSION: #{VERSION}"
-  puts "EDITOR: #{EDITOR}"
+  ensure_git_status_clean
+  changes = changelog_from_git_commits( pretty: "# * %h %s (%an, %ai)" )
+  if changes.empty?
+    UI.abort_with_message! "Nothing has changed since the last tag"
+  end
+  increment_build_number( xcodeproj: XCODEPROJ )
+  build_number = get_build_number( xcodeproj: XCODEPROJ )
+  # TODO set android/app/build.gradle versionCode to this build_number
+  set_android_version_code( build_number )
+  # TODO set android/app/build.gradle versionName to VERSION
+  set_android_version_name( VERSION )
+  tag = "v#{VERSION}+#{build_number}"
+  # Get release notes
   # Bit silly but takes advantage of existing syntax highlighting
   fname = "COMMIT_EDITMSG"
   File.open( fname, "w" ) do | f |
     f << <<~INSTRUCTIONS
 
 
-      # Enter notes about what's new in v#{VERSION}+#{BUILD_NUMBER}. Comment lines beginning with # will be ignored.
+      # Enter notes about what's new in #{tag}. Lines beginning with # will be ignored.
       #
       # Here's what changed since the last tag:
-      #{changelog_from_git_commits.split( "\n" ).map{ | line | "# * #{line}" }.join( "\n" ).strip}
+      #{changes}
     INSTRUCTIONS
   end
   system "#{EDITOR} #{fname}", exception: true
@@ -34,11 +62,32 @@ lane :testlane do
     release_notes += line unless line[0] == "#"
   end
   FileUtils.rm( fname )
-  puts "now i'm done, release_notes:\n#{release_notes}"
-  # add_git_tag(
-  #   includes_lane: false,
-  #   prefix: "v",
-  #   build_number: VERSION,
-  #   postfix: "+#{BUILD_NUMBER}"
-  # )
+  if release_notes.strip.size == 0
+    UI.abort_with_message! "You gotta enter release notes!"
+    reset_git_repo
+  end
+
+  # TODO write release notes to a place where they can be translated and add that file to git
+
+  # TODO commit
+  commit_version_bump( message: tag, xcodeproj: XCODEPROJ, include: [
+    "android/app/build.gradle"
+  ] )
+
+  # Create a tag for this release
+  add_git_tag( tag: tag )
+
+  # TODO push tags
+
+  # up until here everything applies to both platforms, so maybe that's it's
+  # own lane? can you call lanes from other lanes? maybe you could actually
+  # make the github release here and then adding the android apk or whatever
+  # could be a restricted to android-specific stuff
+
+  # TODO Build an APK for Android
+
+  # TODO make a github release for the tab with the release notes and add the APK as an attachment
+
+  # TODO Build an AAB for Android
+  # TODO Upload to play store in internal track
 end
