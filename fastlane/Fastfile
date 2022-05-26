@@ -53,6 +53,7 @@ lane :release do
   system "#{EDITOR} #{fname}", exception: true
   release_notes = ""
   File.readlines( fname ) do | line |
+    puts "Line: #{line}"
     release_notes += line unless line[0] == "#"
   end
   puts "release_notes: #{release_notes}"
