@@ -32,9 +32,9 @@ lane :release do
   end
   increment_build_number( xcodeproj: XCODEPROJ )
   build_number = get_build_number( xcodeproj: XCODEPROJ )
-  # TODO set android/app/build.gradle versionCode to this build_number
+  # set android/app/build.gradle versionCode to this build_number
   set_android_version_code( build_number )
-  # TODO set android/app/build.gradle versionName to VERSION
+  # set android/app/build.gradle versionName to VERSION
   set_android_version_name( VERSION )
   tag = "v#{VERSION}+#{build_number}"
   # Get release notes
@@ -65,7 +65,7 @@ lane :release do
 
   # TODO write release notes to a place where they can be translated and add that file to git
 
-  # TODO commit
+  # commit
   commit_version_bump( message: tag, xcodeproj: XCODEPROJ, include: [
     "android/app/build.gradle"
   ] )
