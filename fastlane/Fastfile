@@ -75,7 +75,7 @@ lane :tag do
   FileUtils.mkpath( changelog_dir_path )
   changelog_path = File.join( changelog_dir_path, "#{build_number}.txt" )
   File.open( changelog_path, "w" ) do | f |
-    f << release_notes
+    f << "#{release_notes}\n"
   end
   changelog_git_path = File.join( "fastlane", changelog_path )
   git_add( path: changelog_git_path )
@@ -85,10 +85,10 @@ lane :tag do
     "android/app/build.gradle",
     changelog_git_path
   ] )
+  push_to_git_remote
 
   # Create a tag for this release
   add_git_tag( tag: tag )
-
   push_git_tags
 
   # up until here everything applies to both platforms, so maybe that's it's
