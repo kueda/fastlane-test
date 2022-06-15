@@ -81,7 +81,8 @@ lane :tag do
 
   # commit
   commit_version_bump( message: tag, xcodeproj: XCODEPROJ, include: [
-    "android/app/build.gradle"
+    "android/app/build.gradle",
+    "fastlane/metadata/android/*"
   ] )
 
   # Create a tag for this release
