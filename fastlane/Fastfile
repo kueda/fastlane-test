@@ -39,15 +39,9 @@ lane :tag do
   increment_build_number( xcodeproj: XCODEPROJ )
   build_number = get_build_number( xcodeproj: XCODEPROJ )
   # set android/app/build.gradle versionCode to this build_number
-  # set_android_version_code( build_number )
+  set_android_version_code( build_number )
   # set android/app/build.gradle versionName to VERSION
-  # set_android_version_name( VERSION )
-  gradle(
-    properties: {
-      "android.injected.version.code" => build_number,
-      "android.injected.version.name" => VERSION,
-    }
-  )
+  set_android_version_name( VERSION )
   tag = "v#{VERSION}+#{build_number}"
 
   changes = changelog_from_git_commits( pretty: "# * %h %s (%an, %ai)" )
@@ -137,14 +131,60 @@ lane :release do
       created when you ran `fastlane tag`.
     MSG
   end
+
+  # Build AAB. This should write
+  # android/app/build/outputs/bundle/release/PACKAGE_ID-vVERSION_NAME+VERSION_CODE-release.aab
+  packageId = "net.kueda.fastlanetest" # TODO get this from the gradle file
+  aab_path = File.join(
+    File.expand_path( File.dirname( __FILE__ ) ),
+    "..",
+    "android",
+    "app",
+    "build",
+    "outputs",
+    "bundle",
+    "release",
+    "#{packageId}-v#{VERSION}+#{build_number}-release.aab"
+  )
+  if File.exist?( aab_path )
+    puts "AAB already exists at #{aab_path}"
+  else
+    gradle( task: "bundle", project_dir: "android" )
+  end
+  unless File.exist?( aab_path )
+    UI.abort_with_message! "Failed to create AAB at #{aab_path}"
+  end
+
+  # Build APK. This should write
+  # android/app/build/outputs/apk/release/PACKAGE_ID-vVERSION_NAME+VERSION_CODE-release.apk
+  apk_path = File.join(
+    File.expand_path( File.dirname( __FILE__ ) ),
+    "..",
+    "android",
+    "app",
+    "build",
+    "outputs",
+    "apk",
+    "release",
+    "#{packageId}-v#{VERSION}+#{build_number}-release.apk"
+  )
+  if File.exist?( apk_path )
+    puts "APK already exists at #{apk_path}"
+  else
+    gradle( task: "build", project_dir: "android" )
+  end
+  unless File.exist?( apk_path )
+    UI.abort_with_message! "Failed to create APK at #{apk_path}"
+  end
+
   github_release = set_github_release(
     repository_name: "kueda/fastlane-test",
     api_token: ENV["GITHUB_TOKEN"],
     name: last_tag,
     tag_name: last_tag,
     description: ( File.read( changelog_path ) rescue nil ),
-    commitish: last_tag,
-    upload_assets: [path_to_apk]
+    commitish: "main",
+    upload_assets: [apk_path]
   )
 end
 
