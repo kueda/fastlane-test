@@ -25,6 +25,12 @@ def set_android_version_name( new_version_name )
   File.open( build_gradle_path, "w" ) { | f | f.write( new_gradle ) }
 end
 
+def get_changelog_path( build_number )
+  changelog_dir_path = File.join( "metadata", "android", "en-US", "changelogs" )
+  FileUtils.mkpath( changelog_dir_path )
+  File.join( changelog_dir_path, "#{build_number}.txt" )
+end
+
 lane :tag do
   desc "Add a new tag with an incremented version"
   ensure_git_status_clean
@@ -33,9 +39,15 @@ lane :tag do
   increment_build_number( xcodeproj: XCODEPROJ )
   build_number = get_build_number( xcodeproj: XCODEPROJ )
   # set android/app/build.gradle versionCode to this build_number
-  set_android_version_code( build_number )
+  # set_android_version_code( build_number )
   # set android/app/build.gradle versionName to VERSION
-  set_android_version_name( VERSION )
+  # set_android_version_name( VERSION )
+  gradle(
+    properties: {
+      "android.injected.version.code" => build_number,
+      "android.injected.version.name" => VERSION,
+    }
+  )
   tag = "v#{VERSION}+#{build_number}"
 
   changes = changelog_from_git_commits( pretty: "# * %h %s (%an, %ai)" )
@@ -71,9 +83,10 @@ lane :tag do
   end
 
   # TODO write release notes to a place where they can be translated and add that file to git
-  changelog_dir_path = File.join( "metadata", "android", "en-US", "changelogs" )
-  FileUtils.mkpath( changelog_dir_path )
-  changelog_path = File.join( changelog_dir_path, "#{build_number}.txt" )
+  # changelog_dir_path = File.join( "metadata", "android", "en-US", "changelogs" )
+  # FileUtils.mkpath( changelog_dir_path )
+  # changelog_path = File.join( changelog_dir_path, "#{build_number}.txt" )
+  changelog_path = get_changelog_path( build_number )
   File.open( changelog_path, "w" ) do | f |
     f << "#{release_notes}\n"
   end
@@ -106,6 +119,33 @@ end
 
 lane :release do
   desc "Make github release for the latest tag and make builds"
+  last_tag = last_git_tag
+  if last_tag.nil? || last_tag.empty?
+    UI.abort_with_message! "No tags have been added yet. Try starting with `fastlane tag`"
+  end
+  build_number = get_build_number( xcodeproj: XCODEPROJ )
+  if build_number.to_s != last_tag.split( "+" ).last
+    UI.abort_with_message! <<~MSG
+      The last tag doesn't match the current build number. Either make a new
+      tag or check out the tag before releasing.
+    MSG
+  end
+  changelog_path = get_changelog_path( build_number )
+  unless File.exist?( changelog_path )
+    UI.abort_with_message! <<~MSG
+      No change log file exists at #{changelog_path}. That should have been
+      created when you ran `fastlane tag`.
+    MSG
+  end
+  github_release = set_github_release(
+    repository_name: "kueda/fastlane-test",
+    api_token: ENV["GITHUB_TOKEN"],
+    name: last_tag,
+    tag_name: last_tag,
+    description: ( File.read( changelog_path ) rescue nil ),
+    commitish: last_tag,
+    upload_assets: [path_to_apk]
+  )
 end
 
 lane :beta do
