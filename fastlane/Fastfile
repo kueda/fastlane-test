@@ -77,12 +77,13 @@ lane :tag do
   File.open( changelog_path, "w" ) do | f |
     f << release_notes
   end
-  git_add( path: File.join( "fastlane", changelog_path ) )
+  changelog_git_path = File.join( "fastlane", changelog_path )
+  git_add( path: changelog_git_path )
 
   # commit
   commit_version_bump( message: tag, xcodeproj: XCODEPROJ, include: [
     "android/app/build.gradle",
-    "fastlane/metadata/android/*"
+    changelog_git_path
   ] )
 
   # Create a tag for this release
