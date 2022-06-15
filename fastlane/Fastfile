@@ -96,6 +96,6 @@ lane :beta do
   desc "Push builds for the latest tag to test tracks"
 end
 
-lane :release do
+lane :prod do
   desc "Push builds for the latest tag to production"
 end
