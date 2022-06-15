@@ -26,7 +26,7 @@ end
 lane :tag do
   desc "Add a new tag with an incremented version"
   last_tag = last_git_tag
-  ensure_git_status_clean
+  # ensure_git_status_clean
   changes = changelog_from_git_commits( pretty: "# * %h %s (%an, %ai)" )
   if last_tag && changes.empty?
     UI.abort_with_message! "Nothing has changed since the last tag (#{last_tag})"
@@ -53,10 +53,11 @@ lane :tag do
   end
   system "#{EDITOR} #{fname}", exception: true
   release_notes = ""
-  File.readlines( fname ) do | line |
+  File.readlines( fname ).each do | line |
     puts "Line: #{line}"
     release_notes += line unless line[0] == "#"
   end
+  release_notes.strip!
   puts "release_notes: #{release_notes}"
   FileUtils.rm( fname )
   if release_notes.strip.size == 0
