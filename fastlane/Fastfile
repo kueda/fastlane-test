@@ -23,8 +23,8 @@ def set_android_version_name( new_version_name )
   File.open( build_gradle_path, "w" ) { | f | f.write( new_gradle ) }
 end
 
-lane :release do
-  desc "Just a test"
+lane :tag do
+  desc "Add a new tag with an incremented version"
   ensure_git_status_clean
   changes = changelog_from_git_commits( pretty: "# * %h %s (%an, %ai)" )
   if changes.empty?
@@ -73,7 +73,7 @@ lane :release do
   # Create a tag for this release
   add_git_tag( tag: tag )
 
-  # TODO push tags
+  push_git_tags
 
   # up until here everything applies to both platforms, so maybe that's it's
   # own lane? can you call lanes from other lanes? maybe you could actually
@@ -82,8 +82,20 @@ lane :release do
 
   # TODO Build an APK for Android
 
-  # TODO make a github release for the tab with the release notes and add the APK as an attachment
+  # TODO make a github release for the tag with the release notes and add the APK as an attachment
 
   # TODO Build an AAB for Android
   # TODO Upload to play store in internal track
+end
+
+lane :release do
+  desc "Make github release for the latest tag and make builds"
+end
+
+lane :beta do
+  desc "Push builds for the latest tag to test tracks"
+end
+
+lane :release do
+  desc "Push builds for the latest tag to production"
 end
