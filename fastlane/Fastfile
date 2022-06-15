@@ -27,8 +27,17 @@ end
 
 lane :tag do
   desc "Add a new tag with an incremented version"
-  last_tag = last_git_tag
   ensure_git_status_clean
+  last_tag = last_git_tag
+  # Increment the iOS build number
+  increment_build_number( xcodeproj: XCODEPROJ )
+  build_number = get_build_number( xcodeproj: XCODEPROJ )
+  # set android/app/build.gradle versionCode to this build_number
+  set_android_version_code( build_number )
+  # set android/app/build.gradle versionName to VERSION
+  set_android_version_name( VERSION )
+  tag = "v#{VERSION}+#{build_number}"
+
   changes = changelog_from_git_commits( pretty: "# * %h %s (%an, %ai)" )
   if last_tag && changes.empty?
     UI.abort_with_message! "Nothing has changed since the last tag (#{last_tag})"
@@ -68,16 +77,7 @@ lane :tag do
   File.open( changelog_path, "w" ) do | f |
     f << release_notes
   end
-  git_add( path: changelog_path )
-
-  # Increment the iOS build number
-  increment_build_number( xcodeproj: XCODEPROJ )
-  build_number = get_build_number( xcodeproj: XCODEPROJ )
-  # set android/app/build.gradle versionCode to this build_number
-  set_android_version_code( build_number )
-  # set android/app/build.gradle versionName to VERSION
-  set_android_version_name( VERSION )
-  tag = "v#{VERSION}+#{build_number}"
+  git_add( path: File.join( "fastlane", changelog_path ) )
 
   # commit
   commit_version_bump( message: tag, xcodeproj: XCODEPROJ, include: [
