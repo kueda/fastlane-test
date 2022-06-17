@@ -1,0 +1,1 @@
+Several steps toward automating the Android build
