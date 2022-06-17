@@ -1,0 +1,3 @@
+This is the full description of this app, which is a test of fastlane integration.
+
+It can contain multiple lines, as I am here demonstrating.

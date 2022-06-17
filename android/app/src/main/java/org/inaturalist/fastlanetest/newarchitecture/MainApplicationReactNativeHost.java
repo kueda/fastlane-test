@@ -1,4 +1,4 @@
-package com.fastlanetest.newarchitecture;
+package org.inaturalist.fastlanetest.newarchitecture;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
@@ -19,9 +19,9 @@ import com.facebook.react.fabric.CoreComponentsRegistry;
 import com.facebook.react.fabric.EmptyReactNativeConfig;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.fastlanetest.BuildConfig;
-import com.fastlanetest.newarchitecture.components.MainComponentsRegistry;
-import com.fastlanetest.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import org.inaturalist.fastlanetest.BuildConfig;
+import org.inaturalist.fastlanetest.newarchitecture.components.MainComponentsRegistry;
+import org.inaturalist.fastlanetest.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 

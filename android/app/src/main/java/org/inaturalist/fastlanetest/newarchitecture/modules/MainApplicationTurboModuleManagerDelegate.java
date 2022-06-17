@@ -1,4 +1,4 @@
-package com.fastlanetest.newarchitecture.modules;
+package org.inaturalist.fastlanetest.newarchitecture.modules;
 
 import com.facebook.jni.HybridData;
 import com.facebook.react.ReactPackage;

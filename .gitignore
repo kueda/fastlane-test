@@ -40,6 +40,7 @@ buck-out/
 \.buckd/
 *.keystore
 !debug.keystore
+keystore.properties
 
 # fastlane
 #
@@ -51,6 +52,7 @@ buck-out/
 */fastlane/report.xml
 */fastlane/Preview.html
 */fastlane/screenshots
+*/fastlane/Appfile
 
 # Bundle artifact
 *.jsbundle

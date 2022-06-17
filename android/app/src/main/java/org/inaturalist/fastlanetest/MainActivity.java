@@ -1,4 +1,4 @@
-package com.fastlanetest;
+package org.inaturalist.fastlanetest;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
