@@ -149,7 +149,7 @@ android {
         applicationId "org.inaturalist.fastlanetest"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
+        versionCode 9
         versionName "0.0.1"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
         setProperty("archivesBaseName", applicationId + "-v" + versionName + "+" + versionCode)
